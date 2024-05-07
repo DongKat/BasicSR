@@ -2,7 +2,6 @@ from os import path as osp
 from torch.utils import data as data
 from torchvision.transforms.functional import normalize
 
-from basicsr.data.data_util import unicodeDict_from_pickle
 from basicsr.utils import FileClient, imfrombytes, img2tensor, rgb2ycbcr, scandir
 from basicsr.utils.registry import DATASET_REGISTRY
 
@@ -14,7 +13,7 @@ class SingleTextImageDataset(data.Dataset):
     Read LQ (Low Quality, e.g. LR (Low Resolution), blurry, noisy, etc).
 
     There is one mode:
-    1. 'meta_info_file': Use meta information file to generate paths.
+    1. 'meta_info_file': Use meta information file to generate paths. Seperator: ' '
 
     Args:
          opt (dict): Config for train datasets. It contains the following keys:
@@ -34,9 +33,6 @@ class SingleTextImageDataset(data.Dataset):
         self.std = opt['std'] if 'std' in opt else None
         self.lq_folder = opt['dataroot_lq']
 
-        self.ucode_dict
-
-
         # Generate paths
         if 'meta_info_file' in self.opt:
             self.paths = []
@@ -48,7 +44,7 @@ class SingleTextImageDataset(data.Dataset):
                     self.paths.append(path)
                     self.labels.append(label)
         else:
-            raise ValueError('Need meta_info_file to generate paths.')
+            raise ValueError('Need meta_info_file to generate paths and labels.')
 
     def __getitem__(self, index):
         if self.file_client is None:
