@@ -12,7 +12,7 @@ from basicsr.utils.registry import DATASET_REGISTRY
 from basicsr.data.data_util import get_label4image
 
 
-# @DATASET_REGISTRY.register()
+@DATASET_REGISTRY.register()
 class PairedTextImageDataset(data.Dataset):
     """Read only lq images in the test phase, with text label
     Note: For Scene Text Super Resolution task. Label stores in meta_info_file. Needs a unicode mapping file to convert label to tensor.

@@ -8,7 +8,7 @@ from basicsr.utils.registry import DATASET_REGISTRY
 
 from basicsr.data.data_util import get_label4image
 
-# @DATASET_REGISTRY.register()
+@DATASET_REGISTRY.register()
 class SingleTextImageDataset(data.Dataset):
     """Read only lq images and labels in the test phase, with text label.
     Used for testing recognition model accuracy on SR images.
