@@ -1,7 +1,7 @@
 # general settings
 name: finetune_RealESRGANx2plus_RealCE_ResnetTextPerceptualLoss
 model_type: RealESRGANModel
-scale: 1
+scale: 2
 num_gpu: auto  # auto: can infer from your visible devices automatically. official: 4 GPUs
 manual_seed: 0
 
@@ -40,8 +40,8 @@ datasets:
   train:
     name: RealCE
     type: PairedImageDataset
-    dataroot_gt: datasets/Real_CE-Test/GT_mod4
-    dataroot_lq: datasets/Real_CE-Test/LQ_bicx2
+    dataroot_gt: /content/dataset/train/GT_mod4
+    dataroot_lq: /content/dataset/train/LQ_bicx2
     io_backend:
       type: disk
 
@@ -78,8 +78,8 @@ datasets:
   val:
     name: validation
     type: PairedImageDataset
-    dataroot_gt: datasets/Real_CE-Test/GT_mod4
-    dataroot_lq: datasets/Real_CE-Test/LQ_bicx2
+    dataroot_gt: /content/dataset/val/GT_mod4
+    dataroot_lq: /content/dataset/val/LQ_bicx2
     io_backend:
       type: disk
 
@@ -102,11 +102,11 @@ network_d:
 # path
 path:
   # use the pre-trained Real-ESRNet model
-  pretrain_network_g: experiments/pretrained_models/Real_ESRGAN/RealESRGAN_x2plus.pth
+  pretrain_network_g: /content/drive/MyDrive/Resource/BasicSR/PretrainedModels/Real-ESRGAN/RealESRGAN_x2plus.pth
   param_key_g: params_ema
   strict_load_g: true
   resume_state: ~
-  pretrain_network_d: experiments/pretrained_models/Real_ESRGAN/RealESRGAN_x2plus_netD.pth
+  pretrain_network_d: /content/drive/MyDrive/Resource/BasicSR/PretrainedModels/Real-ESRGAN/RealESRGAN_x2plus_netD.pth
   param_key_d: params
   strict_load_d: true
   resume_state: ~
@@ -130,7 +130,7 @@ train:
     milestones: [1000]
     gamma: 0.5
 
-  total_iter: 1
+  total_iter: 10000
   warmup_iter: -1  # no warm up
 
   # losses
@@ -180,11 +180,11 @@ val:
 
 # logging settings
 logger:
-  print_freq: 10
-  save_checkpoint_freq: !!float 5e3
-  use_tb_logger: false
+  print_freq: 100
+  save_checkpoint_freq: !!float 1e3
+  use_tb_logger: true
   wandb:
-    project: finetune_RealESRGANx2plus_RealCE_ResnetTextPerceptualLoss_scalex1
+    project: finetune_RealESRGANx2plus_RealCE_ResnetTextPerceptualLoss
     resume_id: ~
 
 # dist training settings
