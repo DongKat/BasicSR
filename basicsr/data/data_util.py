@@ -313,3 +313,41 @@ def duf_downsample(x, kernel_size=13, scale=4):
     if squeeze_flag:
         x = x.squeeze(0)
     return x
+
+#=========================================================================================================
+
+def get_label4image(folders, labels_dict_path, unicode_dict_path):
+    """Get label for image from label dictionary.
+
+    Args:
+        labels_dict_path (str): Path to the label dictionary.
+        unicode_dict_path (str): Path to the unicode dictionary. Which is a pickle file
+
+    Returns:
+        dict: Label dictionary.
+    """
+
+    lq_folder, gt_folder = folders
+
+    unicode_dict = dict()
+    with open(unicode_dict_path, 'rb') as f:
+        import pickle
+        tmp = pickle.load(f)
+    for idx, k in enumerate(tmp.keys()):
+        unicode_dict[k] = idx
+
+
+    labels_dict = dict()
+    with open(labels_dict_path, 'r') as f:
+        for line in f:
+            img_name, label = line.split(',')
+
+            lq_path = osp.join(lq_folder, img_name)
+            gt_path = osp.join(gt_folder, img_name)
+
+            assert osp.exists(lq_path), f'{lq_path} does not exist.'
+            assert osp.exists(gt_path), f'{gt_path} does not exist.'
+
+            labels_dict[img_name] = label
+
+    return labels_dict

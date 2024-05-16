@@ -1,3 +1,4 @@
+#%%
 from os import path as osp
 from torch.utils import data as data
 from torchvision.transforms.functional import normalize
@@ -5,12 +6,12 @@ from torchvision.transforms.functional import normalize
 from basicsr.utils import FileClient, imfrombytes, img2tensor, rgb2ycbcr, scandir
 from basicsr.utils.registry import DATASET_REGISTRY
 
-@DATASET_REGISTRY.register()
-class SingleTextImageDataset(data.Dataset):
-    """Read only lq images in the test phase, with text label
-    Note: For Scene Text Super Resolution task. Label stores in meta_info_file. Needs a unicode mapping file to convert label to tensor.
+from basicsr.data.data_util import get_label4image
 
-    Read LQ (Low Quality, e.g. LR (Low Resolution), blurry, noisy, etc).
+# @DATASET_REGISTRY.register()
+class SingleTextImageDataset(data.Dataset):
+    """Read only lq images and labels in the test phase, with text label.
+    Used for testing recognition model accuracy on SR images.
 
     There is one mode:
     1. 'meta_info_file': Use meta information file to generate paths. Seperator: ' '
@@ -18,8 +19,9 @@ class SingleTextImageDataset(data.Dataset):
     Args:
          opt (dict): Config for train datasets. It contains the following keys:
             dataroot_lq (str): Data root path for lq.
-            unicode_mapping_file (str): Path for unicode mapping file.
-            meta_info_file (str): Path for meta information file, as well as image label.
+            unicode_mapping_dict (str): Path to pickle file, stores unicode mapping file.
+            labels_dict (dict): Dictionary for {img_name: label}.
+            meta_info_file (str): Path for meta information file
             io_backend (dict): IO backend type and other kwarg.
     """
 
@@ -33,18 +35,13 @@ class SingleTextImageDataset(data.Dataset):
         self.std = opt['std'] if 'std' in opt else None
         self.lq_folder = opt['dataroot_lq']
 
-        # Generate paths
-        if 'meta_info_file' in self.opt:
-            self.paths = []
-            self.labels = []
-            with open(self.opt['meta_info_file'], 'r') as fin:
-                for line in fin:
-                    path = osp.join(self.lq_folder, line.rstrip().split(' ')[0])
-                    label = line.rstrip().split(' ')[1]
-                    self.paths.append(path)
-                    self.labels.append(label)
-        else:
-            raise ValueError('Need meta_info_file to generate paths and labels.')
+        self.ucode_dict_path = opt['unicode_mapping_dict']
+        self.labels_dict_path = opt['labels_dict']
+        # Get labels
+        self.label_dict = get_label4image((self.lq_folder, self.lq_folder), self.labels_dict_path, self.ucode_dict_path)
+
+        self.paths = sorted(list(scandir(self.lq_folder, full_path=True)))
+
 
     def __getitem__(self, index):
         if self.file_client is None:
@@ -54,6 +51,9 @@ class SingleTextImageDataset(data.Dataset):
         lq_path = self.paths[index]
         img_bytes = self.file_client.get(lq_path, 'lq')
         img_lq = imfrombytes(img_bytes, float32=True)
+
+        # load lq label
+        label = self.label_dict[osp.basename(lq_path)]
 
         # color space transform
         if 'color' in self.opt and self.opt['color'] == 'y':
@@ -65,6 +65,30 @@ class SingleTextImageDataset(data.Dataset):
         if self.mean is not None or self.std is not None:
             normalize(img_lq, self.mean, self.std, inplace=True)
 
-        return {'lq': img_lq, 'lq_path': lq_path, 'label': self.labels[index]}
 
 
+        return {'lq': img_lq, 'lq_path': lq_path, 'label': label}
+
+
+#%%
+if __name__ == '__main__':
+    opt = dict(
+        dataroot_lq='datasets/Nom-Test/LQ_bicx2',
+        unicode_mapping_dict='datasets/Nom-Test/HWDB1.1-bitmap64-ucode-hannom-v2-tst_seen-label-set-ucode.pkl',
+        labels_dict = 'datasets/Nom-Test/label.txt',
+        io_backend=dict(type='disk'),
+        scale = 2,
+        use_hflip = True,
+        use_rot = False,
+    )
+    dataset = SingleTextImageDataset(opt=opt)
+    sample = dataset[5]
+
+    img_lq = sample['lq']
+    label = sample['label']
+
+    from matplotlib import pyplot as plt
+    plt.imshow(img_lq.permute(1, 2, 0).numpy())
+    plt.show()
+    print(label)
+    print(chr(int(label, 16)))
