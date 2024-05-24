@@ -41,6 +41,7 @@ class ResnetFeatureExtractor(nn.Module):
         if resnet_weights is not None:
             assert os.path.exists(resnet_weights), f'weights path {resnet_weights} does not exist.'
             resnet_model = getattr(resnet, resnet_type)(weights=None)
+            resnet_model.fc = nn.Linear(2048, 5568)
             state_dict = torch.load(resnet_weights)
             resnet_model.load_state_dict(state_dict)
         else:
