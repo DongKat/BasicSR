@@ -9,7 +9,7 @@ datasets:
     name: RealCE
     type: PairedImageDataset
     dataroot_gt: datasets/Real_CE-Test/GT
-    dataroot_lq: datasets/Real_CE-Test/LQ_bicx2
+    dataroot_lq: datasets/Real_CE-Test/LQ_bicx4
     io_backend:
       type: disk
 
