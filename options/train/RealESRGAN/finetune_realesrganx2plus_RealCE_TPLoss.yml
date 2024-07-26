@@ -136,7 +136,7 @@ train:
   # losses
   pixel_opt:
     type: L1Loss
-    loss_weight: 0.0
+    loss_weight: 1.0
     reduction: mean
   # gradient_opt:
   #   type: GradientPenaltyLoss
